@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Subject {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  acronym      String
+  title        String
+  aliases      String   @default("[]") // JSON array
+  departments  String   // JSON array
+  typicalYear  Int      @map("typical_year")
+  typicalSem   Int      @map("typical_sem")
+  subjectType  String   @map("subject_type") // 'Core' | 'Lab' | 'Elective'
+  censorRating String   @map("censor_rating") // 'U' | 'PG-13' | 'R' | 'NC-17'
+  tagline      String?
+  avgOverall   Float    @default(0) @map("avg_overall")
+  avgSurvival  Float    @default(0) @map("avg_survival")
+  avgBrainMelt Float    @default(0) @map("avg_brain_melt")
+  avgValue     Float    @default(0) @map("avg_value")
+  weightedScore Float   @default(0) @map("weighted_score")
+  scoreStddev  Float    @default(0) @map("score_stddev")
+  voteCount    Int      @default(0) @map("vote_count")
+  status       String   @default("approved") // 'approved' | 'pending'
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ratings         Rating[]
+  reviews         Review[]
+  subjectRelations SubjectRelation[] @relation("SubjectRelations")
+  relatedTo        SubjectRelation[] @relation("RelatedSubjects")
+  archetypeVotes   ArchetypeVote[]
+  memeCredits      MemeCredit[]
+
+  @@map("subjects")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  branch       String?
+  gradYear     Int?     @map("grad_year")
+  bio          String?
+  topFourIds   String   @default("[]") @map("top_four_ids") // JSON array
+  role         String   @default("user") // 'user' | 'admin'
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ratings         Rating[]
+  reviews         Review[]
+  reviewReactions ReviewReaction[]
+  comments        Comment[]
+  reports         Report[]
+  archetypeVotes  ArchetypeVote[]
+  memeCredits     MemeCredit[]
+  userLists       UserList[]
+  listLikes       UserListLike[]
+
+  @@map("users")
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  subjectId  Int      @map("subject_id")
+  overall    Int
+  survival   Int
+  brainMelt  Int      @map("brain_melt")
+  realValue  Int      @map("real_value")
+  genres     String   @default("[]") // JSON array
+  statusTag  String   @map("status_tag") // 'Survived' | 'Barely Escaped' | 'Currently Suffering' | 'Got a Backlog' | 'Certified Topper'
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  review  Review?
+
+  @@unique([userId, subjectId])
+  @@map("ratings")
+}
+
+model Review {
+  id           Int      @id @default(autoincrement())
+  ratingId     Int      @unique @map("rating_id")
+  userId       Int      @map("user_id")
+  subjectId    Int      @map("subject_id")
+  headline     String?
+  body         String
+  feltThisCount Int     @default(0) @map("felt_this_count")
+  traumaCount   Int     @default(0) @map("trauma_count")
+  capCount      Int     @default(0) @map("cap_count")
+  isHidden      Boolean @default(false) @map("is_hidden")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  rating    Rating  @relation(fields: [ratingId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  reactions ReviewReaction[]
+  comments  Comment[]
+
+  @@map("reviews")
+}
+
+model ReviewReaction {
+  id           Int      @id @default(autoincrement())
+  reviewId     Int      @map("review_id")
+  userId       Int      @map("user_id")
+  reactionType String   @map("reaction_type") // 'felt_this' | 'trauma' | 'cap'
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId, reactionType])
+  @@map("review_reactions")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  reviewId  Int      @map("review_id")
+  userId    Int      @map("user_id")
+  body      String
+  isHidden  Boolean  @default(false) @map("is_hidden")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model SubjectRelation {
+  id              Int    @id @default(autoincrement())
+  subjectId       Int    @map("subject_id")
+  relatedSubjectId Int   @map("related_subject_id")
+  relationTitle   String @map("relation_title")
+  relationNote    String @map("relation_note")
+
+  subject        Subject @relation("SubjectRelations", fields: [subjectId], references: [id], onDelete: Cascade)
+  relatedSubject Subject @relation("RelatedSubjects", fields: [relatedSubjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, relatedSubjectId])
+  @@map("subject_relations")
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  reporterId Int      @map("reporter_id")
+  targetType String   @map("target_type") // 'review' | 'comment'
+  targetId   Int      @map("target_id")
+  reason     String
+  status     String   @default("open") // 'open' | 'resolved' | 'dismissed'
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  reporter User @relation(fields: [reporterId], references: [id])
+
+  @@map("reports")
+}
+
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  eventName String   @map("event_name")
+  userId    Int?     @map("user_id")
+  metadata  String   @default("{}") // JSON
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("analytics_events")
+}
+
+// Phase 2: Professor Archetype Votes (Zero-Drama Classroom Tropes)
+model ArchetypeVote {
+  id           Int      @id @default(autoincrement())
+  subjectId    Int      @map("subject_id")
+  userId       Int      @map("user_id")
+  archetypeKey String   @map("archetype_key")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, userId, archetypeKey])
+  @@map("archetype_votes")
+}
+
+// Phase 2: Parody Cast & Crew Credits
+model MemeCredit {
+  id         Int      @id @default(autoincrement())
+  subjectId  Int      @map("subject_id")
+  userId     Int      @map("user_id")
+  roleLabel  String   @map("role_label") // 'Starring' | 'Supporting Cast' | 'Main Villain' | 'Plot Twist'
+  creditText String   @map("credit_text")
+  upvotes    Int      @default(1)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("meme_credits")
+}
+
+// Phase 2: Custom User Lists (Watchlists)
+model UserList {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  slug        String   @unique
+  title       String
+  description String?
+  subjectIds  String   @map("subject_ids") // JSON array of numbers
+  likesCount  Int      @default(0) @map("likes_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes UserListLike[]
+
+  @@map("user_lists")
+}
+
+model UserListLike {
+  id        Int      @id @default(autoincrement())
+  listId    Int      @map("list_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  list UserList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, userId])
+  @@map("user_list_likes")
+}
