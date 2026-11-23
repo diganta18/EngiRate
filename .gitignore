@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production Build Outputs
+dist/
+client/dist/
+build/
+
+# Local Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# SQLite Database & Cache
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+server/dev.db
+server/dev.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
