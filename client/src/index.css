@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --canvas: #FAF8F5;
+    --card: #FFFFFF;
+    --border: #E6E2DA;
+    --text-primary: #141414;
+    --text-secondary: #666660;
+    --black: #0A0A0A;
+    --amber: #D97706;
+    --crimson: #B91C1C;
+    --forest: #15803D;
+    --stone: #78716C;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom styling for editorial paper aesthetic */
+.paper-border {
+  border-color: #E6E2DA;
+}
+
+.paper-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E6E2DA;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.015);
+}
+
+.paper-card-elevated {
+  background-color: #FFFFFF;
+  border: 1px solid #DFD9CF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 12px 28px rgba(0, 0, 0, 0.03);
+}
+
+/* Custom slider aesthetics */
+input[type=range] {
+  accent-color: #0A0A0A;
+}
+
+/* Custom ink stamp effect for censor ratings */
+.censor-stamp {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  border: 2px solid currentColor;
+  padding: 2px 6px;
+  display: inline-block;
+  transform: rotate(-1.5deg);
+}
