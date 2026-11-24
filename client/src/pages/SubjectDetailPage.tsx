@@ -11,6 +11,8 @@ import { RatingModal } from '../components/RatingModal'
 import { CensorCertificateModal } from '../components/CensorCertificateModal'
 import { ArchetypeSection } from '../components/ArchetypeSection'
 import { CastAndCrewSection } from '../components/CastAndCrewSection'
+import { SurvivalDrawer } from '../components/SurvivalDrawer'
+import { DirectorsCutModal } from '../components/DirectorsCutModal'
 import { CENSOR_META } from '../lib/posterTheme'
 import { Star, ArrowLeft, ArrowUpRight, Sparkles, Swords, Check } from 'lucide-react'
 
@@ -31,6 +33,26 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
   // Modals
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [newCertificate, setNewCertificate] = useState<Certificate | null>(null)
+  
+  // Phase 3 Easter Egg: 3x click on Censor Rating Badge
+  const [censorClicks, setCensorClicks] = useState(0)
+  const [lastCensorClickTime, setLastCensorClickTime] = useState(0)
+  const [isDirectorsCutOpen, setIsDirectorsCutOpen] = useState(false)
+
+  const handleCensorBadgeClick = () => {
+    const now = Date.now()
+    if (now - lastCensorClickTime < 1500) {
+      const next = censorClicks + 1
+      setCensorClicks(next)
+      if (next >= 3) {
+        setIsDirectorsCutOpen(true)
+        setCensorClicks(0)
+      }
+    } else {
+      setCensorClicks(1)
+    }
+    setLastCensorClickTime(now)
+  }
 
   useEffect(() => {
     fetchSubjectDetail()
@@ -150,16 +172,23 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
                 ))}
               </div>
 
-              {/* Censor Stamp */}
+              {/* Censor Stamp (Easter Egg trigger on 3x click) */}
               <div
-                className="font-mono text-xs font-bold px-2 py-0.5 rounded border flex items-center gap-1.5"
+                onClick={handleCensorBadgeClick}
+                className="font-mono text-xs font-bold px-2 py-0.5 rounded border flex items-center gap-1.5 cursor-pointer select-none active:scale-95 transition-all hover:shadow-xs"
                 style={{
                   color: censorMeta.color,
                   borderColor: censorMeta.color,
                   backgroundColor: `${censorMeta.color}10`,
                 }}
+                title="Click 3x for Unrated Director's Cut"
               >
                 <span>{censorMeta.label}</span>
+                {censorClicks > 0 && (
+                  <span className="text-[9px] opacity-75 font-mono">
+                    [{censorClicks}/3]
+                  </span>
+                )}
               </div>
             </div>
 
@@ -329,6 +358,12 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
       {/* Parody Top Cast & Crew Section */}
       <CastAndCrewSection subjectId={subject.id} />
 
+      {/* Emergency 48-Hour Survival Drawer */}
+      <SurvivalDrawer
+        subjectId={subject.id}
+        subjectTitle={subject.title}
+      />
+
       {/* Micro-Reviews Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-[#E6E2DA] pb-3 flex-wrap gap-2">
@@ -418,6 +453,17 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
         <CensorCertificateModal
           certificate={newCertificate}
           onClose={() => setNewCertificate(null)}
+        />
+      )}
+
+      {/* Unrated Director's Cut Easter Egg Modal */}
+      {data.directorsCut && (
+        <DirectorsCutModal
+          isOpen={isDirectorsCutOpen}
+          onClose={() => setIsDirectorsCutOpen(false)}
+          subjectTitle={subject.title}
+          subjectAcronym={subject.acronym}
+          directorsCut={data.directorsCut}
         />
       )}
     </div>
