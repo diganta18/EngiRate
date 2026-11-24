@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Search, User, LogOut, ShieldCheck, Film } from 'lucide-react'
+import { Search, User, LogOut, ShieldCheck, Film, Plus, Sparkles } from 'lucide-react'
+import { SubmitSubjectModal } from './SubmitSubjectModal'
 
 interface NavbarProps {
   onOpenSearch: () => void
@@ -10,6 +11,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, currentPath = '/' }) => {
   const { user, logout, openAuthModal } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E6E2DA]">
@@ -56,11 +58,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, currentPath = '/' 
             >
               Watchlists
             </a>
+            <a
+              href="/forecast"
+              className={`transition-colors hover:text-black flex items-center gap-1 ${
+                currentPath === '/forecast' ? 'text-black font-semibold border-b-2 border-black pb-0.5' : 'text-[#666660]'
+              }`}
+            >
+              <Sparkles className="w-3 h-3 text-amber-600" />
+              <span>Forecast</span>
+            </a>
           </nav>
         </div>
 
-        {/* Right: Instant Search & Auth */}
-        <div className="flex items-center gap-3">
+        {/* Right: Propose Button, Instant Search & Auth */}
+        <div className="flex items-center gap-2.5">
+          {/* Propose Subject Button */}
+          <button
+            onClick={() => {
+              if (!user) openAuthModal('login')
+              else setIsSubmitOpen(true)
+            }}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 border border-[#E6E2DA] hover:border-black rounded-sm text-xs font-mono text-[#141414] bg-white transition-colors"
+            title="Propose a missing engineering subject to catalog"
+          >
+            <Plus className="w-3 h-3 text-amber-600" />
+            <span>Propose</span>
+          </button>
+
           {/* Search Trigger */}
           <button
             onClick={onOpenSearch}
@@ -139,6 +163,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, currentPath = '/' 
           )}
         </div>
       </div>
+
+      {/* Propose Subject Modal */}
+      <SubmitSubjectModal
+        isOpen={isSubmitOpen}
+        onClose={() => setIsSubmitOpen(false)}
+      />
     </header>
   )
 }
