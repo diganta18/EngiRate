@@ -120,12 +120,69 @@ export interface CinemaLink {
   relationNote: string
 }
 
+export interface DirectorsCut {
+  scoreStddev: number
+  variance: number
+  voteCounts: { score: number; count: number }[]
+  branchBreakdown: { branch: string; avgScore: number; count: number }[]
+  statusTagCounts: Record<string, number>
+  totalVotes: number
+}
+
 export interface SubjectDetailResponse {
   subject: Subject
   histogram: Record<number, number>
   topGenres: string[]
   userRating: Rating | null
   cinemaLinks: CinemaLink[]
+  directorsCut?: DirectorsCut
+}
+
+export interface StudyResource {
+  id: number
+  subjectId: number
+  title: string
+  url: string
+  resourceType: 'YouTube' | 'Notes' | 'CrashCourse' | 'PYQ'
+  upvotes: number
+  createdAt: string
+  user: {
+    id: number
+    username: string
+  }
+}
+
+export interface ForecastResult {
+  title: string
+  genre: string
+  tagline: string
+  censorRating: CensorRating
+  survivalIndex: number
+  avgSurvival: number
+  avgBrainMelt: number
+  avgOverall: number
+  avgRealValue: number
+  predictedSleepHours: number
+  highestRiskSubject: {
+    id: number
+    acronym: string
+    title: string
+    slug: string
+    avgSurvival: number
+    avgBrainMelt: number
+    censorRating: CensorRating
+  }
+  survivalGear: string[]
+  subjects: {
+    id: number
+    slug: string
+    acronym: string
+    title: string
+    censorRating: CensorRating
+    avgSurvival: number
+    avgBrainMelt: number
+    weightedScore: number
+  }[]
 }
 
 export interface AuthUser {
