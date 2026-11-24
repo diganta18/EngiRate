@@ -35,6 +35,7 @@ model Subject {
   relatedTo        SubjectRelation[] @relation("RelatedSubjects")
   archetypeVotes   ArchetypeVote[]
   memeCredits      MemeCredit[]
+  studyResources   StudyResource[]
 
   @@map("subjects")
 }
@@ -60,6 +61,7 @@ model User {
   memeCredits     MemeCredit[]
   userLists       UserList[]
   listLikes       UserListLike[]
+  studyResources  StudyResource[]
 
   @@map("users")
 }
@@ -232,4 +234,21 @@ model UserListLike {
 
   @@unique([listId, userId])
   @@map("user_list_likes")
+}
+
+// Phase 3: Emergency 48-Hour Survival Links
+model StudyResource {
+  id           Int      @id @default(autoincrement())
+  subjectId    Int      @map("subject_id")
+  userId       Int      @map("user_id")
+  title        String
+  url          String
+  resourceType String   @map("resource_type") // 'YouTube' | 'Notes' | 'CrashCourse' | 'PYQ'
+  upvotes      Int      @default(1)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("study_resources")
 }
