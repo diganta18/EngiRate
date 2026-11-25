@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import { CompareProvider } from './context/CompareContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Navbar } from './components/Navbar'
 import { InstantSearchModal } from './components/InstantSearchModal'
 import { AuthModal } from './components/AuthModal'
@@ -13,6 +14,7 @@ import { AdminPage } from './pages/AdminPage'
 import { ComparePage } from './pages/ComparePage'
 import { WatchlistsPage } from './pages/WatchlistsPage'
 import { WatchlistDetailPage } from './pages/WatchlistDetailPage'
+import { ForecastPage } from './pages/ForecastPage'
 
 export const AppContent: React.FC = () => {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
@@ -108,6 +110,11 @@ export const AppContent: React.FC = () => {
       return <WatchlistsPage />
     }
 
+    // Forecast: /forecast
+    if (currentPath === '/forecast') {
+      return <ForecastPage />
+    }
+
     // Default: HomePage
     return <HomePage />
   }
@@ -150,10 +157,12 @@ export const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CompareProvider>
-        <AppContent />
-      </CompareProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CompareProvider>
+          <AppContent />
+        </CompareProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
