@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { requireAuth, optionalAuth } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 export const ARCHETYPES = [
   'The "Read The Slides" Guy',

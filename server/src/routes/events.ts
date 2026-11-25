@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { optionalAuth } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 const EventSchema = z.object({
   eventName: z.string().min(1).max(100),

@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { requireAuth, requireAdmin } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 router.use(requireAuth, requireAdmin)
 
