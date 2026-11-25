@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { requireAuth, optionalAuth } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 const REACTION_TYPES = ['felt_this', 'trauma', 'cap'] as const
 

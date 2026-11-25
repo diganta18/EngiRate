@@ -1,11 +1,10 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { requireAuth } from '../lib/auth'
 import { recalculateSubjectStats } from '../lib/bayesian'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 const GENRES = ['Psychological Horror', 'Filler Episode', 'Plot Twist Exam', 'Sleeper Hit', 'Slow Burn', 'Pure Fiction', 'Action-Thriller', 'Certified GPA Farmer'] as const
 const STATUS_TAGS = ['Survived', 'Barely Escaped', 'Currently Suffering', 'Got a Backlog', 'Certified Topper'] as const

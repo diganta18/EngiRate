@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { requireAuth, optionalAuth } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 function computeCriticPersona(ratings: { overall: number; statusTag: string; createdAt: Date }[]): string {
   if (ratings.length === 0) return 'The Connoisseur'

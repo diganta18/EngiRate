@@ -1,11 +1,10 @@
 import { Router } from 'express'
-import { PrismaClient } from '@prisma/client'
 import argon2 from 'argon2'
 import { z } from 'zod'
+import { prisma } from '../lib/prisma'
 import { signToken, requireAuth } from '../lib/auth'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 const RegisterSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
