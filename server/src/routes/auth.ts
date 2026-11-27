@@ -1,10 +1,57 @@
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import argon2 from 'argon2'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { signToken, requireAuth } from '../lib/auth'
+import { signToken, verifyToken, requireAuth, GUEST_COOKIE_NAME } from '../lib/auth'
 
 const router = Router()
+
+/**
+ * Transfers any ratings and reviews created under an anonymous guest session
+ * to a newly registered or logged-in user account, then cleans up the guest row.
+ */
+async function claimGuestRatings(req: Request, res: Response, targetUserId: number): Promise<number> {
+  const guestToken = req.cookies?.[GUEST_COOKIE_NAME]
+  if (!guestToken) return 0
+
+  try {
+    const payload = verifyToken(guestToken)
+    if (!payload.isGuest || payload.userId === targetUserId) return 0
+
+    const guestRatings = await prisma.rating.findMany({
+      where: { userId: payload.userId },
+      include: { review: true },
+    })
+
+    let claimedCount = 0
+    for (const gr of guestRatings) {
+      const conflict = await prisma.rating.findUnique({
+        where: { userId_subjectId: { userId: targetUserId, subjectId: gr.subjectId } },
+      })
+      if (!conflict) {
+        await prisma.rating.update({
+          where: { id: gr.id },
+          data: { userId: targetUserId },
+        })
+        if (gr.review) {
+          await prisma.review.update({
+            where: { id: gr.review.id },
+            data: { userId: targetUserId },
+          })
+        }
+        claimedCount++
+      }
+    }
+
+    await prisma.user.deleteMany({
+      where: { id: payload.userId, role: 'guest' },
+    })
+    res.clearCookie(GUEST_COOKIE_NAME)
+    return claimedCount
+  } catch {
+    return 0
+  }
+}
 
 const RegisterSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
@@ -31,9 +78,14 @@ router.post('/register', async (req, res) => {
   const passwordHash = await argon2.hash(password)
   const user = await prisma.user.create({ data: { username, email, passwordHash, branch, gradYear } })
 
+  const claimedCount = await claimGuestRatings(req, res, user.id)
+
   const token = signToken({ userId: user.id, username: user.username, role: user.role })
   res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 })
-  res.json({ user: { id: user.id, username: user.username, email: user.email, role: user.role, branch: user.branch, gradYear: user.gradYear } })
+  res.json({
+    user: { id: user.id, username: user.username, email: user.email, role: user.role, branch: user.branch, gradYear: user.gradYear },
+    claimedGuestRatings: claimedCount,
+  })
 })
 
 router.post('/login', async (req, res) => {
@@ -47,9 +99,20 @@ router.post('/login', async (req, res) => {
   const valid = await argon2.verify(user.passwordHash, password)
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' })
 
+  const claimedCount = await claimGuestRatings(req, res, user.id)
+
   const token = signToken({ userId: user.id, username: user.username, role: user.role })
   res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 })
-  res.json({ user: { id: user.id, username: user.username, email: user.email, role: user.role, branch: user.branch, gradYear: user.gradYear } })
+  res.json({
+    user: { id: user.id, username: user.username, email: user.email, role: user.role, branch: user.branch, gradYear: user.gradYear },
+    claimedGuestRatings: claimedCount,
+  })
+})
+
+router.post('/claim-guest', requireAuth, async (req, res) => {
+  const user = (req as any).user
+  const claimedCount = await claimGuestRatings(req, res, user.userId)
+  res.json({ claimedGuestRatings: claimedCount })
 })
 
 router.post('/logout', (req, res) => {
