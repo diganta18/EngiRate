@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { requireAuth } from '../lib/auth'
+import { requireAuth, requireAuthOrGuest } from '../lib/auth'
 import { recalculateSubjectStats } from '../lib/bayesian'
 
 const router = Router()
@@ -20,7 +20,7 @@ const RateSchema = z.object({
   reviewBody: z.string().max(500).optional(),
 })
 
-router.post('/subjects/:subjectId/rate', requireAuth, async (req, res) => {
+router.post('/subjects/:subjectId/rate', requireAuthOrGuest, async (req, res) => {
   const user = (req as any).user
   const subjectId = parseInt(req.params.subjectId as string, 10)
 
@@ -61,7 +61,7 @@ router.post('/subjects/:subjectId/rate', requireAuth, async (req, res) => {
     issuedAt: new Date().toISOString(),
   }
 
-  res.json({ rating, subject: updatedSubject, certificate })
+  res.json({ rating, subject: updatedSubject, certificate, isGuest: Boolean(user.isGuest) })
 })
 
 router.get('/subjects/:subjectId/my-rating', requireAuth, async (req, res) => {
