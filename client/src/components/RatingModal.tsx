@@ -6,8 +6,9 @@ import { X, AlertCircle } from 'lucide-react'
 interface RatingModalProps {
   subject: Subject
   currentRating?: Rating | null
+  isGuest?: boolean
   onClose: () => void
-  onSuccess: (data: { rating: Rating; subject: Subject; certificate: any }) => void
+  onSuccess: (data: { rating: Rating; subject: Subject; certificate: any; isGuest?: boolean }) => void
 }
 
 const GENRES = [
@@ -32,6 +33,7 @@ const STATUS_TAGS: StatusTag[] = [
 export const RatingModal: React.FC<RatingModalProps> = ({
   subject,
   currentRating,
+  isGuest = false,
   onClose,
   onSuccess,
 }) => {
@@ -93,10 +95,17 @@ export const RatingModal: React.FC<RatingModalProps> = ({
 
         {/* Modal Header */}
         <div className="mb-5 border-b border-[#E6E2DA] pb-3">
-          <span className="font-mono text-[10px] tracking-widest text-[#666660] uppercase">
-            Official Review & Rating Dossier
-          </span>
-          <h2 className="font-serif text-2xl font-bold text-[#141414] tracking-tight">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="font-mono text-[10px] tracking-widest text-[#666660] uppercase">
+              Official Review & Rating Dossier
+            </span>
+            {isGuest && (
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Anonymous Guest Mode • No Login Required
+              </span>
+            )}
+          </div>
+          <h2 className="font-serif text-2xl font-bold text-[#141414] tracking-tight mt-0.5">
             Rate {subject.title} ({subject.acronym})
           </h2>
         </div>
