@@ -33,6 +33,7 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
   // Modals
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [newCertificate, setNewCertificate] = useState<Certificate | null>(null)
+  const [showGuestClaimToast, setShowGuestClaimToast] = useState(false)
   
   // Phase 3 Easter Egg: 3x click on Censor Rating Badge
   const [censorClicks, setCensorClicks] = useState(0)
@@ -89,17 +90,16 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
   }
 
   const handleRateClick = () => {
-    if (!user) {
-      openAuthModal('login')
-      return
-    }
     setIsRatingModalOpen(true)
   }
 
-  const handleRatingSuccess = (res: { rating: Rating; subject: Subject; certificate: Certificate }) => {
+  const handleRatingSuccess = (res: { rating: Rating; subject: Subject; certificate: Certificate; isGuest?: boolean }) => {
     setIsRatingModalOpen(false)
     setData((prev) => prev ? { ...prev, subject: res.subject, userRating: res.rating } : null)
     setNewCertificate(res.certificate)
+    if (res.isGuest || !user) {
+      setShowGuestClaimToast(true)
+    }
     fetchReviews()
   }
 
@@ -443,9 +443,41 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
         <RatingModal
           subject={subject}
           currentRating={userRating}
+          isGuest={!user}
           onClose={() => setIsRatingModalOpen(false)}
           onSuccess={handleRatingSuccess}
         />
+      )}
+
+      {/* Non-intrusive Guest Transcript Claim Toast */}
+      {showGuestClaimToast && !user && (
+        <div className="fixed bottom-5 right-5 z-40 max-w-sm bg-[#0A0A0A] text-[#FAF8F5] border border-neutral-800 p-4 rounded-sm shadow-2xl flex items-start justify-between gap-3">
+          <div className="space-y-1.5">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-amber-400 block">
+              Rating Recorded
+            </span>
+            <p className="text-xs font-sans text-neutral-200 leading-snug">
+              Want to keep your Critic Transcript, pick a handle, and pin your Top 4?
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => {
+                  setShowGuestClaimToast(false)
+                  openAuthModal('register')
+                }}
+                className="px-3 py-1 bg-white text-black font-mono text-[11px] font-semibold rounded-sm hover:bg-neutral-200 transition-colors"
+              >
+                Claim Account
+              </button>
+              <button
+                onClick={() => setShowGuestClaimToast(false)}
+                className="px-2 py-1 text-neutral-400 hover:text-white font-mono text-[11px]"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Censor Certificate Reveal Modal */}
