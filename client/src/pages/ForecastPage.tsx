@@ -32,20 +32,26 @@ export const ForecastPage: React.FC = () => {
   const posterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetchSubjects()
+    const controller = new AbortController()
+    fetchSubjects(controller.signal)
+    return () => controller.abort()
   }, [])
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = async (signal?: AbortSignal) => {
     try {
-      const res = await fetch('/api/subjects?limit=100')
+      const res = await fetch('/api/subjects?limit=100', { signal })
       if (res.ok) {
         const json = await res.json()
         setSubjects(json.subjects || [])
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        console.error(err)
+      }
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }
 
