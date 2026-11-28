@@ -3,13 +3,21 @@ import { useCompare } from '../context/CompareContext'
 import { Swords, X, ArrowRight } from 'lucide-react'
 
 export const ComparisonTray: React.FC = () => {
-  const { selectedSlugs, removeSubject, clearSubjects } = useCompare()
+  const { selectedSlugs, notice, clearNotice, removeSubject, clearSubjects } = useCompare()
 
   if (selectedSlugs.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl bg-[#0A0A0A] text-[#FAF8F5] border border-neutral-700 shadow-2xl rounded-sm p-3 animate-in slide-in-from-bottom-4 duration-200">
-      <div className="flex items-center justify-between gap-3">
+    <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl bg-[#0A0A0A] text-[#FAF8F5] border border-neutral-700 shadow-2xl rounded-sm p-2.5 sm:p-3 animate-in slide-in-from-bottom-4 duration-200">
+      {notice && (
+        <div className="mb-2 px-2.5 py-1.5 bg-amber-950/80 border border-amber-700/60 text-amber-200 text-[11px] font-mono rounded-xs flex items-center justify-between gap-2">
+          <span>{notice}</span>
+          <button onClick={clearNotice} className="text-amber-300 hover:text-white shrink-0" aria-label="Dismiss notice">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-2 overflow-x-auto py-1">
           <div className="flex items-center gap-1 font-mono text-xs text-amber-400 font-bold shrink-0 mr-1">
             <Swords className="w-4 h-4" />
