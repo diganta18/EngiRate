@@ -10,12 +10,15 @@ const REACTION_TYPES = ['felt_this', 'trauma', 'cap'] as const
 // GET /api/reviews/subjects/:subjectId - list reviews for a subject
 router.get('/subjects/:subjectId', optionalAuth, async (req, res) => {
   const subjectId = parseInt(req.params.subjectId as string, 10)
-  const { sort = 'recent', page = '1' } = req.query
-  const take = 10
-  const skip = (parseInt(page as string) - 1) * take
+  const { sort = 'recent', page = '1', limit = '10' } = req.query
+  const take = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 10))
+  const currentPage = Math.max(1, parseInt(page as string, 10) || 1)
+  const skip = (currentPage - 1) * take
 
   const orderBy: any = sort === 'top'
     ? { feltThisCount: 'desc' }
+    : sort === 'unhinged'
+    ? { traumaCount: 'desc' }
     : { createdAt: 'desc' }
 
   const [reviews, total] = await Promise.all([
