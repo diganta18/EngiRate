@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { Search, User, LogOut, ShieldCheck, Film, Plus, Sparkles } from 'lucide-react'
+import { Search, User, LogOut, ShieldCheck, Film, Plus, Sparkles, Menu, X } from 'lucide-react'
 import { SubmitSubjectModal } from './SubmitSubjectModal'
 
 interface NavbarProps {
@@ -12,6 +12,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, currentPath = '/' 
   const { user, logout, openAuthModal } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [isSubmitOpen, setIsSubmitOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#E6E2DA]">
@@ -149,20 +150,75 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch, currentPath = '/' 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => openAuthModal('login')}
-                className="text-xs font-mono text-[#666660] hover:text-black px-2.5 py-1.5 transition-colors"
+                className="text-xs font-mono text-[#666660] hover:text-black px-2 py-1.5 transition-colors"
               >
                 Sign In
               </button>
               <button
                 onClick={() => openAuthModal('register')}
-                className="text-xs font-mono font-medium bg-[#0A0A0A] hover:bg-neutral-800 text-[#FAF8F5] px-3.5 py-1.5 rounded-sm transition-colors uppercase tracking-wider"
+                className="text-xs font-mono font-medium bg-[#0A0A0A] hover:bg-neutral-800 text-[#FAF8F5] px-3 py-1.5 rounded-sm transition-colors uppercase tracking-wider"
               >
                 Join
               </button>
             </div>
           )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-1.5 border border-[#E6E2DA] rounded-sm bg-white text-[#141414] hover:border-black transition-colors"
+            aria-label="Toggle mobile navigation"
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <nav className="md:hidden border-t border-[#E6E2DA] bg-[#FAF8F5] px-4 py-3 space-y-2 text-xs font-mono uppercase tracking-wider">
+          <a
+            href="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`block py-1.5 ${currentPath === '/' ? 'text-black font-bold' : 'text-[#666660]'}`}
+          >
+            Catalog
+          </a>
+          <a
+            href="/charts"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`block py-1.5 ${currentPath === '/charts' ? 'text-black font-bold' : 'text-[#666660]'}`}
+          >
+            Leaderboards
+          </a>
+          <a
+            href="/lists"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`block py-1.5 ${currentPath.startsWith('/lists') ? 'text-black font-bold' : 'text-[#666660]'}`}
+          >
+            Watchlists
+          </a>
+          <a
+            href="/forecast"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`flex items-center gap-1.5 py-1.5 ${currentPath === '/forecast' ? 'text-black font-bold' : 'text-[#666660]'}`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>Semester Forecast</span>
+          </a>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false)
+              if (!user) openAuthModal('login')
+              else setIsSubmitOpen(true)
+            }}
+            className="w-full text-left flex items-center gap-1.5 py-1.5 text-[#141414] font-semibold border-t border-[#E6E2DA] pt-2.5"
+          >
+            <Plus className="w-3.5 h-3.5 text-amber-600" />
+            <span>Propose Missing Subject</span>
+          </button>
+        </nav>
+      )}
 
       {/* Propose Subject Modal */}
       <SubmitSubjectModal
