@@ -14,9 +14,10 @@ const submitLimiter = rateLimit({
 
 // GET /api/subjects - list and filter subjects
 router.get('/', optionalAuth, async (req, res) => {
-  const { search, dept, year, sem, type, sort = 'weighted', page = '1' } = req.query
-  const take = 20
-  const skip = (parseInt(page as string) - 1) * take
+  const { search, dept, year, sem, type, sort = 'weighted', page = '1', limit = '20' } = req.query
+  const take = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 20))
+  const currentPage = Math.max(1, parseInt(page as string, 10) || 1)
+  const skip = (currentPage - 1) * take
 
   const where: any = { status: 'approved' }
 
