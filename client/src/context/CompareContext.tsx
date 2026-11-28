@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 
 interface CompareContextType {
   selectedSlugs: string[]
+  notice: string | null
+  clearNotice: () => void
   addSubject: (slug: string) => void
   removeSubject: (slug: string) => void
   clearSubjects: () => void
@@ -19,18 +21,23 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return []
     }
   })
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     localStorage.setItem('engirate_compare_tray', JSON.stringify(selectedSlugs))
   }, [selectedSlugs])
 
+  const clearNotice = () => setNotice(null)
+
   const addSubject = (slug: string) => {
     const clean = slug.toLowerCase()
     if (selectedSlugs.includes(clean)) return
     if (selectedSlugs.length >= 4) {
-      alert('You can compare a maximum of 4 subjects side-by-side.')
+      setNotice('VS Mode holds up to 4 subjects. Remove one before adding another.')
+      setTimeout(() => setNotice(null), 3500)
       return
     }
+    setNotice(null)
     setSelectedSlugs([...selectedSlugs, clean])
   }
 
@@ -51,6 +58,8 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <CompareContext.Provider
       value={{
         selectedSlugs,
+        notice,
+        clearNotice,
         addSubject,
         removeSubject,
         clearSubjects,
