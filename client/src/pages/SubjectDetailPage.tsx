@@ -27,6 +27,9 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
   const [data, setData] = useState<SubjectDetailResponse | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewsTotal, setReviewsTotal] = useState(0)
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [reviewsPages, setReviewsPages] = useState(1)
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
   const [reviewsSort, setReviewsSort] = useState<'recent' | 'top' | 'unhinged'>('top')
   const [loading, setLoading] = useState(true)
 
@@ -56,36 +59,48 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
   }
 
   useEffect(() => {
-    fetchSubjectDetail()
-    fetchReviews()
+    let active = true
+    const load = async () => {
+      setLoading(true)
+      try {
+        const res = await subjectsApi.getBySlug(slug)
+        if (!active) return
+        setData(res)
+        setReviewsPage(1)
+        await fetchReviews(res.subject.id, 1, false)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      active = false
+    }
   }, [slug])
 
   useEffect(() => {
-    fetchReviews()
+    if (data?.subject?.id) {
+      setReviewsPage(1)
+      fetchReviews(data.subject.id, 1, false)
+    }
   }, [reviewsSort])
 
-  const fetchSubjectDetail = async () => {
-    setLoading(true)
+  const fetchReviews = async (subjectId?: number, page = 1, append = false) => {
+    const id = subjectId ?? data?.subject?.id
+    if (!id) return
     try {
-      const res = await subjectsApi.getBySlug(slug)
-      setData(res)
+      if (append) setLoadingMoreReviews(true)
+      const res = await reviewsApi.getBySubject(id, { sort: reviewsSort, page })
+      setReviews((prev) => (append ? [...prev, ...res.reviews] : res.reviews))
+      setReviewsTotal(res.total)
+      setReviewsPage(res.page)
+      setReviewsPages(res.pages)
     } catch (err) {
       console.error(err)
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchReviews = async () => {
-    if (!slug) return
-    try {
-      // First get subject ID if not yet loaded
-      const resSub = await subjectsApi.getBySlug(slug)
-      const res = await reviewsApi.getBySubject(resSub.subject.id, { sort: reviewsSort })
-      setReviews(res.reviews)
-      setReviewsTotal(res.total)
-    } catch (err) {
-      console.error(err)
+      if (append) setLoadingMoreReviews(false)
     }
   }
 
@@ -431,9 +446,23 @@ export const SubjectDetailPage: React.FC<SubjectDetailPageProps> = ({ slug }) =>
               <ReviewCard
                 key={rev.id}
                 review={rev}
-                onReactionChange={fetchReviews}
+                onReactionChange={() => fetchReviews(subject.id, 1, false)}
               />
             ))}
+
+            {reviewsPage < reviewsPages && (
+              <div className="pt-2 text-center">
+                <button
+                  onClick={() => fetchReviews(subject.id, reviewsPage + 1, true)}
+                  disabled={loadingMoreReviews}
+                  className="px-5 py-2 bg-white border border-[#E6E2DA] hover:border-black text-xs font-mono uppercase tracking-wider text-[#141414] rounded-sm transition-colors disabled:opacity-50"
+                >
+                  {loadingMoreReviews
+                    ? 'Loading more reviews...'
+                    : `Load More Reviews (${reviews.length} of ${reviewsTotal})`}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
